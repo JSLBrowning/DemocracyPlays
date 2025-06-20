@@ -1,4 +1,4 @@
-# DougDoug Note: 
+# DougDoug Note:
 # This is the code that connects to Twitch / Youtube and checks for new messages.
 # You should not need to modify anything in this file, just use as is.
 
@@ -7,18 +7,17 @@
 # Updated for Youtube by DDarknut, with help by Ottomated
 
 import requests
-import sys
 import socket
 import re
 import random
 import time
-import os
 import json
 import concurrent.futures
 import traceback
 
 MAX_TIME_TO_WAIT_FOR_LOGIN = 3
 YOUTUBE_FETCH_INTERVAL = 1
+
 
 class Twitch:
     re_prog = None
@@ -29,14 +28,16 @@ class Twitch:
     login_timestamp = 0
 
     def twitch_connect(self, channel):
-        if self.sock: self.sock.close()
+        if self.sock:
+            self.sock.close()
         self.sock = None
         self.partial = b''
         self.login_ok = False
         self.channel = channel
 
         # Compile regular expression
-        self.re_prog = re.compile(b'^(?::(?:([^ !\r\n]+)![^ \r\n]*|[^ \r\n]*) )?([^ \r\n]+)(?: ([^:\r\n]*))?(?: :([^\r\n]*))?\r\n', re.MULTILINE)
+        self.re_prog = re.compile(
+            b'^(?::(?:([^ !\r\n]+)![^ \r\n]*|[^ \r\n]*) )?([^ \r\n]+)(?: ([^:\r\n]*))?(?: :([^\r\n]*))?\r\n', re.MULTILINE)
 
         # Create socket
         print('Connecting to Twitch...')
@@ -109,7 +110,8 @@ class Twitch:
 
                 if matches[0].start() != 0:
                     # If we get here, we might have missed a message. pepeW
-                    print('either ddarknut fucked up or twitch is bonkers, or both I mean who really knows anything at this point')
+                    print(
+                        'either ddarknut fucked up or twitch is bonkers, or both I mean who really knows anything at this point')
 
             return res
 
@@ -127,21 +129,32 @@ class Twitch:
             elif cmd == 'PING':
                 self.sock.send(b'PONG :tmi.twitch.tv\r\n')
             elif cmd == '001':
-                print('Successfully logged in. Joining channel %s.' % self.channel)
+                print('Successfully logged in. Joining channel %s.' %
+                      self.channel)
                 self.sock.send(('JOIN #%s\r\n' % self.channel).encode())
                 self.login_ok = True
             elif cmd == 'JOIN':
-                print('Successfully joined channel %s' % irc_message['params'][0])
+                print('Successfully joined channel %s' %
+                      irc_message['params'][0])
             elif cmd == 'NOTICE':
-                print('Server notice:', irc_message['params'], irc_message['trailing'])
-            elif cmd == '002': continue
-            elif cmd == '003': continue
-            elif cmd == '004': continue
-            elif cmd == '375': continue
-            elif cmd == '372': continue
-            elif cmd == '376': continue
-            elif cmd == '353': continue
-            elif cmd == '366': continue
+                print('Server notice:',
+                      irc_message['params'], irc_message['trailing'])
+            elif cmd == '002':
+                continue
+            elif cmd == '003':
+                continue
+            elif cmd == '004':
+                continue
+            elif cmd == '375':
+                continue
+            elif cmd == '372':
+                continue
+            elif cmd == '376':
+                continue
+            elif cmd == '353':
+                continue
+            elif cmd == '366':
+                continue
             else:
                 print('Unhandled irc message:', irc_message)
 
@@ -155,6 +168,8 @@ class Twitch:
         return privmsgs
 
 # Thanks to Ottomated for helping with the yt side of things!
+
+
 class YouTube:
     session = None
     config = {}
@@ -164,7 +179,8 @@ class YouTube:
     fetch_job = None
     next_fetch_time = 0
 
-    re_initial_data = re.compile('(?:window\\s*\\[\\s*[\\"\']ytInitialData[\\"\']\\s*\\]|ytInitialData)\\s*=\\s*({.+?})\\s*;')
+    re_initial_data = re.compile(
+        '(?:window\\s*\\[\\s*[\\"\']ytInitialData[\\"\']\\s*\\]|ytInitialData)\\s*=\\s*({.+?})\\s*;')
     re_config = re.compile('(?:ytcfg\\s*.set)\\(({.+?})\\)\\s*;')
 
     def get_continuation_token(self, data):
@@ -180,7 +196,8 @@ class YouTube:
                 print("Waiting for fetch job to finish...")
                 self.fetch_job.result()
         print(f"Retrying in {delay}...")
-        if self.session: self.session.close()
+        if self.session:
+            self.session.close()
         self.session = None
         self.config = {}
         self.payload = {}
@@ -200,7 +217,8 @@ class YouTube:
         # Spoof user agent so yt thinks we're an upstanding browser
         self.session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36'
         # Add consent cookie to bypass google's consent page
-        requests.utils.add_dict_to_cookiejar(self.session.cookies, {'CONSENT': 'YES+'})
+        requests.utils.add_dict_to_cookiejar(
+            self.session.cookies, {'CONSENT': 'YES+'})
 
         # Connect using stream_url if provided, otherwise use the channel_id
         if stream_url is not None:
@@ -214,9 +232,11 @@ class YouTube:
             res = self.session.get(live_url)
         if not res.ok:
             if stream_url is not None:
-                print(f"Couldn't load the stream URL ({res.status_code} {res.reason}). Is the stream URL correct? {self.stream_url}")
+                print(
+                    f"Couldn't load the stream URL ({res.status_code} {res.reason}). Is the stream URL correct? {self.stream_url}")
             else:
-                print(f"Couldn't load livestream page ({res.status_code} {res.reason}). Is the channel ID correct? {self.channel_id}")
+                print(
+                    f"Couldn't load livestream page ({res.status_code} {res.reason}). Is the channel ID correct? {self.channel_id}")
             time.sleep(5)
             exit(1)
         livestream_page = res.text
@@ -232,16 +252,20 @@ class YouTube:
         # Get continuation token for live chat iframe
         iframe_continuation = None
         try:
-            iframe_continuation = initial_data['contents']['twoColumnWatchNextResults']['conversationBar']['liveChatRenderer']['header']['liveChatHeaderRenderer']['viewSelector']['sortFilterSubMenuRenderer']['subMenuItems'][1]['continuation']['reloadContinuationData']['continuation']
+            iframe_continuation = initial_data['contents']['twoColumnWatchNextResults']['conversationBar']['liveChatRenderer']['header'][
+                'liveChatHeaderRenderer']['viewSelector']['sortFilterSubMenuRenderer']['subMenuItems'][1]['continuation']['reloadContinuationData']['continuation']
         except Exception as e:
-            print(f"Couldn't find the livestream chat. Is the channel not live? url: {live_url}")
+            print(
+                f"Couldn't find the livestream chat. Is the channel not live? url: {live_url}")
             time.sleep(5)
             exit(1)
 
         # Fetch live chat page
-        res = self.session.get(f'https://youtube.com/live_chat?continuation={iframe_continuation}')
+        res = self.session.get(
+            f'https://youtube.com/live_chat?continuation={iframe_continuation}')
         if not res.ok:
-            print(f"Couldn't load live chat page ({res.status_code} {res.reason})")
+            print(
+                f"Couldn't load live chat page ({res.status_code} {res.reason})")
             time.sleep(5)
             exit(1)
         live_chat_page = res.text
@@ -275,7 +299,8 @@ class YouTube:
 
     def fetch_messages(self):
         payload_bytes = bytes(json.dumps(self.payload), "utf8")
-        res = self.session.post(f"https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key={self.config['INNERTUBE_API_KEY']}&prettyPrint=false", payload_bytes)
+        res = self.session.post(
+            f"https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key={self.config['INNERTUBE_API_KEY']}&prettyPrint=false", payload_bytes)
         if not res.ok:
             print(f"Failed to fetch messages. {res.status_code} {res.reason}")
             print("Body:", res.text)

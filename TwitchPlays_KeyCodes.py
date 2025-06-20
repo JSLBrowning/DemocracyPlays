@@ -1,4 +1,4 @@
-# DougDoug Note: 
+# DougDoug Note:
 # This code contains key codes plus functions to press keys on Windows
 # You should not need to modify anything in this file, just use as is.
 
@@ -126,21 +126,27 @@ MOUSE_WHEEL_DOWN = 0x109
 # Use these to prevent conflict errors with pynput.
 SendInput = ctypes.windll.user32.SendInput
 
+
 def HoldKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = pynput._util.win32.INPUT_union()
-    ii_.ki = pynput._util.win32.KEYBDINPUT(0, hexKeyCode, 0x0008, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
+    ii_.ki = pynput._util.win32.KEYBDINPUT(
+        0, hexKeyCode, 0x0008, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
     x = pynput._util.win32.INPUT(ctypes.c_ulong(1), ii_)
     SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
 
 def ReleaseKey(hexKeyCode):
     extra = ctypes.c_ulong(0)
     ii_ = pynput._util.win32.INPUT_union()
-    ii_.ki = pynput._util.win32.KEYBDINPUT(0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
+    ii_.ki = pynput._util.win32.KEYBDINPUT(
+        0, hexKeyCode, 0x0008 | 0x0002, 0, ctypes.cast(ctypes.pointer(extra), ctypes.c_void_p))
     x = pynput._util.win32.INPUT(ctypes.c_ulong(1), ii_)
     SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
 # Holds down a key for the specified number of seconds
+
+
 def HoldAndReleaseKey(hexKeyCode, seconds):
     HoldKey(hexKeyCode)
     time.sleep(seconds)
