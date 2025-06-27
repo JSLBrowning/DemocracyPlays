@@ -82,6 +82,26 @@ def execute_command(cmd):
 # Main loop
 command_counts = defaultdict(int)
 last_vote_time = time.time()
+valid_commands = [
+    "up",
+    "left",
+    "down",
+    "right",
+    "a",
+    "b",
+    "up left",
+    "up right",
+    "down left",
+    "down right",
+    "tap up",
+    "tap left",
+    "tap down",
+    "tap right",
+    "last toa",
+    "next toa",
+    "last disk",
+    "next disk"
+]
 
 while True:
     # Check for new messages
@@ -89,12 +109,16 @@ while True:
     if new_messages:
         for message in new_messages:
             cmd = message['message'].lower().strip()
+            if cmd in valid_commands:
+                # Increment the count for the command
+                if cmd not in command_counts:
+                    command_counts[cmd] = 0
             command_counts[cmd] += 1
 
     # Check if it's time to process votes
     current_time = time.time()
     if current_time - last_vote_time >= VOTE_INTERVAL:
-        if command_counts:
+        if command_counts and len(command_counts) > 0:
             # Find the command with highest votes
             max_count = max(command_counts.values())
             winning_commands = [
